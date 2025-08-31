@@ -473,6 +473,7 @@ class ChatWidget {
 				this.sendBtn.disabled = false;
 				this.addSystemMessage("Connected to chat server");
 				this.startPingSystem();
+				this.updateUsersList();
 			};
 
 			this.ws.onmessage = (event) => {

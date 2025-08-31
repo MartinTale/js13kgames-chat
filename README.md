@@ -70,7 +70,7 @@ A lightweight, self-contained chat widget that can be embedded in any website. P
 <script>
 	const widget = window.createChatWidget({
 		container: document.body, // optional
-		wsUrl: 'wss://relay.js13kgames.com/black-cat-chat' // optional
+		wsUrl: "wss://relay.js13kgames.com/black-cat-chat", // optional
 	});
 </script>
 ```
@@ -128,7 +128,7 @@ The widget automatically adapts to different screen sizes:
 ### 🎯 Widget Use Cases
 
 - **Game Communities**: Perfect for JS13K games and other web games
-- **Live Coding**: Real-time chat during coding sessions  
+- **Live Coding**: Real-time chat during coding sessions
 - **Customer Support**: Lightweight support chat
 - **Educational Platforms**: Student-teacher communication
 - **Events**: Chat for livestreams and webinars
@@ -144,7 +144,7 @@ Both the app and widget use a simple JSON message format:
 // User message
 {
     id: "timestamp",
-    user: "user_id", 
+    user: "user_id",
     message: "Hello world!",
     timestamp: 1234567890,
     type: "user"
@@ -172,7 +172,7 @@ Both the app and widget use a simple JSON message format:
 ## 🔐 Security Notes
 
 - Messages are limited to 200 characters
-- Display names are limited to 10 characters  
+- Display names are limited to 10 characters
 - HTML content is automatically escaped
 - No authentication required (anonymous chat)
 
