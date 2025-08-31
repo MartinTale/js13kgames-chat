@@ -320,6 +320,13 @@ function addSystemMessage(message: string): void {
 function updateStatus(status: string, color: string): void {
 	statusDiv.textContent = status;
 	statusDiv.style.color = color;
+	
+	// Hide status div when connected, show when disconnected
+	if (status === "Connected") {
+		statusDiv.style.display = "none";
+	} else {
+		statusDiv.style.display = "block";
+	}
 }
 
 function scrollToBottom(): void {
