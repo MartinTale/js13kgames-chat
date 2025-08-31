@@ -129,6 +129,41 @@ body {
 	border: 1px solid #444;
 }
 
+.user-item.self {
+	border-left-color: #08f;
+	background: #2a2a3a;
+	font-weight: bold;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.user-edit-btn {
+	background: none;
+	border: none;
+	color: #08f;
+	cursor: pointer;
+	font-size: 10px;
+	padding: 2px 4px;
+	border-radius: 2px;
+	margin-left: 5px;
+}
+
+.user-edit-btn:hover {
+	background: #333;
+}
+
+.user-name-input {
+	background: #333;
+	border: 1px solid #08f;
+	color: #fff;
+	border-radius: 2px;
+	font-family: monospace;
+	font-size: 12px;
+	padding: 2px 4px;
+	width: 80px;
+}
+
 /* Users list styling */
 #users-list {
 	height: 100%;
@@ -153,11 +188,6 @@ body {
 	font-size: 12px;
 }
 
-.user-item.self {
-	border-left-color: #08f;
-	background: #2a2a3a;
-	font-weight: bold;
-}
 
 /* Responsive design */
 @media (max-width: 768px) {

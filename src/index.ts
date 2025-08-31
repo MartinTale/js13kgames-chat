@@ -3,7 +3,7 @@ interface ChatMessage {
 	user: string;
 	message: string;
 	timestamp: number;
-	type?: "user" | "system" | "ping";
+	type?: "user" | "system" | "ping" | "leave";
 }
 
 interface OnlineUser {
@@ -22,6 +22,7 @@ let userId: string;
 let userDisplayName: string;
 let reconnectAttempts = 0;
 const maxReconnectAttempts = 5;
+let isEditingName = false;
 
 // User tracking
 let onlineUsers: Map<string, OnlineUser> = new Map();
@@ -43,14 +44,28 @@ function generateDisplayName(): string {
 }
 
 function getOrCreateDisplayName(): string {
-	const stored = localStorage.getItem('chat-display-name');
+	const stored = localStorage.getItem("chat-display-name");
 	if (stored) {
-		return stored;
+		return stored.slice(0, 10); // Ensure stored name doesn't exceed 10 chars
 	}
-	
+
 	const newName = generateDisplayName();
-	localStorage.setItem('chat-display-name', newName);
+	localStorage.setItem("chat-display-name", newName);
 	return newName;
+}
+
+function setDisplayName(name: string): void {
+	const trimmedName = name.trim();
+	if (trimmedName.length === 0) return;
+
+	const truncatedName = trimmedName.slice(0, 10);
+	userDisplayName = truncatedName;
+	localStorage.setItem("chat-display-name", truncatedName);
+
+	// Only update user list if not currently editing
+	if (!isEditingName) {
+		updateUsersList();
+	}
 }
 
 function startPingSystem(): void {
@@ -107,6 +122,19 @@ function setupEventListeners(): void {
 	messageInput.addEventListener("keypress", (e) => {
 		if (e.key === "Enter") {
 			sendMessage();
+		}
+	});
+
+	// Send leave message when user closes the page
+	window.addEventListener("beforeunload", () => {
+		sendLeaveMessage();
+	});
+
+	// Also handle page visibility change (tab switching, etc.)
+	document.addEventListener("visibilitychange", () => {
+		if (document.visibilityState === "hidden") {
+			// Don't send leave message for tab switching - only for actual page unload
+			// This is handled by beforeunload event
 		}
 	});
 }
@@ -197,6 +225,8 @@ function handleMessage(data: ChatMessage): void {
 		addSystemMessage(data.message);
 	} else if (data.type === "ping") {
 		handlePing(data);
+	} else if (data.type === "leave") {
+		handleLeave(data);
 	} else {
 		addUserMessage(data.user, data.message, data.timestamp);
 	}
@@ -206,14 +236,42 @@ function handlePing(data: ChatMessage): void {
 	// Don't process our own ping
 	if (data.user === userId) return;
 
+	// Truncate display name to 10 characters
+	const truncatedDisplayName = data.message.slice(0, 10);
+
 	// Update or add user
 	onlineUsers.set(data.user, {
 		id: data.user,
 		lastPing: data.timestamp,
-		displayName: data.message, // displayName is sent in message field for pings
+		displayName: truncatedDisplayName, // displayName is sent in message field for pings
 	});
 
 	updateUsersList();
+}
+
+function handleLeave(data: ChatMessage): void {
+	// Don't process our own leave message
+	if (data.user === userId) return;
+
+	// Remove user from online list
+	const user = onlineUsers.get(data.user);
+	if (user) {
+		onlineUsers.delete(data.user);
+		updateUsersList();
+	}
+}
+
+function sendLeaveMessage(): void {
+	if (ws && ws.readyState === WebSocket.OPEN) {
+		const leaveMessage: ChatMessage = {
+			id: Date.now().toString(),
+			user: userId,
+			message: userDisplayName,
+			timestamp: Date.now(),
+			type: "leave"
+		};
+		ws.send(JSON.stringify(leaveMessage));
+	}
 }
 
 function addUserMessage(user: string, message: string, timestamp: number): void {
@@ -321,18 +379,80 @@ function addTestMessages(): void {
 	updateUsersList();
 }
 
+function startNameEdit(selfDiv: HTMLElement, nameSpan: HTMLElement, editBtn: HTMLElement): void {
+	isEditingName = true;
+
+	const input = document.createElement("input");
+	input.className = "user-name-input";
+	input.type = "text";
+	input.value = userDisplayName;
+	input.maxLength = 10;
+
+	const finishEdit = () => {
+		isEditingName = false;
+		const newName = input.value.trim();
+		if (newName.length > 0) {
+			setDisplayName(newName);
+		}
+		// Always update the UI to show the current name (whether changed or not)
+		nameSpan.textContent = `${userDisplayName} (You)`;
+		selfDiv.replaceChild(nameSpan, input);
+		selfDiv.appendChild(editBtn);
+		updateUsersList();
+	};
+
+	const cancelEdit = () => {
+		isEditingName = false;
+		nameSpan.textContent = `${userDisplayName} (You)`;
+		selfDiv.replaceChild(nameSpan, input);
+		selfDiv.appendChild(editBtn);
+	};
+
+	input.addEventListener("keypress", (e) => {
+		if (e.key === "Enter") {
+			finishEdit();
+		} else if (e.key === "Escape") {
+			cancelEdit();
+		}
+	});
+
+	input.addEventListener("blur", finishEdit);
+
+	// Replace name span with input
+	selfDiv.replaceChild(input, nameSpan);
+	selfDiv.removeChild(editBtn);
+	input.focus();
+	input.select();
+}
+
 function updateUsersList(): void {
 	const userCount = onlineUsers.size + 1; // +1 for self
 	const userCountText = `Online (${userCount})`;
+
+	if (isEditingName) return;
 
 	// Update user count in status or create users list
 	let usersList = document.createElement("div");
 	usersList.innerHTML = `<div class="users-header">${userCountText}</div>`;
 
-	// Add yourself first
+	// Add yourself first with edit functionality
 	const selfDiv = document.createElement("div");
 	selfDiv.className = "user-item self";
-	selfDiv.textContent = `${userDisplayName} (You)`;
+
+	const nameSpan = document.createElement("span");
+	nameSpan.textContent = `${userDisplayName} (You)`;
+
+	const editBtn = document.createElement("button");
+	editBtn.className = "user-edit-btn";
+	editBtn.textContent = "✏️";
+	editBtn.title = "Edit name";
+
+	editBtn.addEventListener("click", () => {
+		startNameEdit(selfDiv, nameSpan, editBtn);
+	});
+
+	selfDiv.appendChild(nameSpan);
+	selfDiv.appendChild(editBtn);
 	usersList.appendChild(selfDiv);
 
 	// Add other users
