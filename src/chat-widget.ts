@@ -33,6 +33,9 @@ class ChatWidget {
 	private reconnectAttempts = 0;
 	private readonly maxReconnectAttempts = 5;
 	private isEditingName = false;
+	private isOpen = false;
+	private chatButton!: HTMLElement;
+	private chatContainer!: HTMLElement;
 
 	// User tracking
 	private onlineUsers: Map<string, OnlineUser> = new Map();
@@ -62,28 +65,42 @@ class ChatWidget {
 			throw new Error("Chat widget container not found");
 		}
 
-		this.createWidget(options);
+		this.createWidget();
 		this.setupEventListeners();
 		this.connect();
 	}
 
-	private createWidget(options: ChatWidgetOptions): void {
+	private createWidget(): void {
 		// Inject styles
-		this.injectStyles(options);
+		this.injectStyles();
 
-		// Create widget HTML
+		// Create widget HTML with button and toggleable container
 		const widgetHTML = `
-			<div class="chat-widget">
-				<div class="chat-widget-container">
-					<div class="chat-messages" id="chat-messages-${this.userId}"></div>
-					<div class="chat-input-area">
-						<input type="text" class="chat-message-input" placeholder="Type your message..." maxlength="200" id="chat-input-${this.userId}">
-						<button class="chat-send-btn" id="chat-send-${this.userId}">Send</button>
+			<div class="chat-widget-wrapper">
+				<button class="chat-toggle-btn" id="chat-toggle-${this.userId}">
+					<span class="chat-btn-icon">💬</span>
+					<span class="chat-btn-text">Chat</span>
+				</button>
+				<div class="chat-widget-container" id="chat-container-${this.userId}" style="display: none;">
+					<div class="chat-widget">
+						<div class="chat-main">
+							<div class="chat-header">
+								<span class="chat-title">JS13K Chat</span>
+								<button class="chat-close-btn" id="chat-close-${this.userId}">×</button>
+							</div>
+							<div class="chat-content">
+								<div class="chat-messages" id="chat-messages-${this.userId}"></div>
+								<div class="chat-input-area">
+									<input type="text" class="chat-message-input" placeholder="Type your message..." maxlength="200" id="chat-input-${this.userId}">
+									<button class="chat-send-btn" id="chat-send-${this.userId}">Send</button>
+								</div>
+							</div>
+						</div>
+						<div class="chat-sidebar">
+							<div class="chat-status" id="chat-status-${this.userId}">Disconnected</div>
+							<div class="chat-users" id="chat-users-${this.userId}"></div>
+						</div>
 					</div>
-				</div>
-				<div class="chat-sidebar">
-					<div class="chat-status" id="chat-status-${this.userId}">Disconnected</div>
-					<div class="chat-users" id="chat-users-${this.userId}"></div>
 				</div>
 			</div>
 		`;
@@ -91,45 +108,127 @@ class ChatWidget {
 		this.container.innerHTML = widgetHTML;
 
 		// Get element references
+		this.chatButton = document.getElementById(`chat-toggle-${this.userId}`)!;
+		this.chatContainer = document.getElementById(`chat-container-${this.userId}`)!;
 		this.messagesDiv = document.getElementById(`chat-messages-${this.userId}`)!;
 		this.messageInput = document.getElementById(`chat-input-${this.userId}`) as HTMLInputElement;
 		this.sendBtn = document.getElementById(`chat-send-${this.userId}`) as HTMLButtonElement;
 		this.statusDiv = document.getElementById(`chat-status-${this.userId}`)!;
 		this.usersDiv = document.getElementById(`chat-users-${this.userId}`)!;
+
+		// Set up toggle functionality
+		this.setupToggleListeners();
 	}
 
-	private injectStyles(options: ChatWidgetOptions): void {
+	private injectStyles(): void {
 		const styleId = "chat-widget-styles";
 		if (document.getElementById(styleId)) return;
 
 		const styles = `
-			.chat-widget {
+			.chat-widget-wrapper {
+				position: fixed;
+				bottom: 20px;
+				right: 20px;
+				z-index: 10000;
 				font-family: monospace;
-				background-color: #111;
-				color: #fff;
-				border: 1px solid #333;
-				border-radius: 8px;
+			}
+			.chat-toggle-btn {
+				background: #0f8;
+				color: #000;
+				border: none;
+				border-radius: 50px;
+				padding: 12px 16px;
+				cursor: pointer;
+				font-family: monospace;
+				font-weight: bold;
+				font-size: 14px;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+				transition: all 0.2s ease;
+			}
+			.chat-toggle-btn:hover {
+				background: #0a6;
+				transform: translateY(-2px);
+				box-shadow: 0 6px 16px rgba(0, 255, 136, 0.4);
+			}
+			.chat-btn-icon {
+				font-size: 18px;
+			}
+			.chat-widget-container {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				width: 100vw;
+				height: 100vh;
+				background: #111;
+				z-index: 9999;
+				overflow: hidden;
+			}
+			.chat-widget {
 				display: flex;
 				width: 100%;
 				height: 100%;
 				overflow: hidden;
 				box-sizing: border-box;
+				color: #fff;
 			}
 			.chat-widget * {
 				box-sizing: border-box;
 			}
-			.chat-widget-container {
+			.chat-main {
+				display: flex;
+				flex-direction: column;
+				flex: 1;
+				min-width: 0;
+			}
+			.chat-header {
+				background: #1a1a1a;
+				padding: 12px 16px;
+				border-bottom: 1px solid #333;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+			.chat-title {
+				font-weight: bold;
+				color: #0f8;
+				font-size: 14px;
+			}
+			.chat-close-btn {
+				background: none;
+				border: none;
+				color: #888;
+				cursor: pointer;
+				font-size: 20px;
+				width: 24px;
+				height: 24px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border-radius: 4px;
+				transition: all 0.2s ease;
+			}
+			.chat-close-btn:hover {
+				background: #333;
+				color: #fff;
+			}
+			.chat-content {
 				display: flex;
 				flex-direction: column;
 				flex: 1;
 				padding: 10px;
-				min-width: 0;
+				min-height: 0;
 			}
 			.chat-sidebar {
-				width: 180px;
+				width: 140px;
 				background: #1a1a1aaa;
 				border-left: 1px solid #333;
 				padding: 10px;
+				flex-shrink: 0;
 			}
 			.chat-messages {
 				flex: 1;
@@ -261,7 +360,7 @@ class ChatWidget {
 				padding: 2px 4px;
 				width: 80px;
 			}
-			@media (max-width: 600px) {
+			@media (max-width: 768px) {
 				.chat-widget {
 					flex-direction: column;
 				}
@@ -272,7 +371,7 @@ class ChatWidget {
 					border-top: 1px solid #333;
 					order: 2;
 				}
-				.chat-widget-container {
+				.chat-main {
 					order: 1;
 				}
 			}
@@ -285,7 +384,7 @@ class ChatWidget {
 	}
 
 	private generateUserId(): string {
-		return "user_" + Math.random().toString(36).substr(2, 9);
+		return "user_" + Math.random().toString(36).substring(2, 11);
 	}
 
 	private generateDisplayName(): string {
@@ -329,6 +428,13 @@ class ChatWidget {
 		}
 	}
 
+	private setupToggleListeners(): void {
+		this.chatButton.addEventListener("click", () => this.toggleChat());
+		
+		const closeBtn = document.getElementById(`chat-close-${this.userId}`);
+		closeBtn?.addEventListener("click", () => this.closeChat());
+	}
+
 	private setupEventListeners(): void {
 		this.sendBtn.addEventListener("click", () => this.sendMessage());
 
@@ -341,6 +447,20 @@ class ChatWidget {
 		window.addEventListener("beforeunload", () => {
 			this.sendLeaveMessage();
 		});
+	}
+
+	private toggleChat(): void {
+		this.isOpen = !this.isOpen;
+		this.chatContainer.style.display = this.isOpen ? "block" : "none";
+		
+		if (this.isOpen) {
+			this.messageInput.focus();
+		}
+	}
+
+	private closeChat(): void {
+		this.isOpen = false;
+		this.chatContainer.style.display = "none";
 	}
 
 	private connect(): void {

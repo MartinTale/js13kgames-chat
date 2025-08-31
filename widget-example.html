@@ -76,29 +76,34 @@
 	</head>
 	<body>
 		<div class="container">
-			<h1>🐾 Chat Widget Integration Examples</h1>
+			<h1>🐾 Self-Contained Chat Widget</h1>
+			<p style="text-align: center; color: #666; font-size: 18px; margin-bottom: 30px;">
+				A floating chat button and widget that can be embedded on any website
+			</p>
 
 			<div class="features">
 				<div class="feature">
 					<h3>✨ Features</h3>
 					<ul>
+						<li>Floating chat button</li>
+						<li>Self-contained popup widget</li>
 						<li>Real-time WebSocket chat</li>
 						<li>User presence tracking</li>
 						<li>Editable display names</li>
 						<li>Dark theme design</li>
-						<li>Mobile responsive design</li>
-						<li>Self-contained CSS</li>
+						<li>Mobile responsive</li>
+						<li>No external dependencies</li>
 					</ul>
 				</div>
 				<div class="feature">
-					<h3>🎯 Use Cases</h3>
+					<h3>🎯 Perfect For</h3>
 					<ul>
-						<li>Game development communities</li>
-						<li>Live coding sessions</li>
+						<li>Website visitor chat</li>
+						<li>Game community support</li>
+						<li>Live event discussions</li>
 						<li>Customer support</li>
-						<li>Event livestreams</li>
+						<li>Developer communities</li>
 						<li>Educational platforms</li>
-						<li>Developer forums</li>
 					</ul>
 				</div>
 			</div>
@@ -106,67 +111,77 @@
 			<div class="example">
 				<h2>🚀 Quick Start (Auto-Initialize)</h2>
 				<p>
-					Add the script and a container with <code>data-chat-widget-auto</code> attribute. The
-					widget fills the container:
+					Simply add the script and a container with <code>data-chat-widget-auto</code> attribute. 
+					The widget creates a floating chat button:
 				</p>
 				<div class="code">
-					&lt;script src="dist/widget/chat-widget.iife.js"&gt;&lt;/script&gt; &lt;div style="width:
-					600px; height: 400px;"&gt; &lt;div data-chat-widget-auto&gt;&lt;/div&gt; &lt;/div&gt;
+&lt;!-- Add the chat widget script --&gt;
+&lt;script src="dist/widget/chat-widget.iife.js"&gt;&lt;/script&gt;
+
+&lt;!-- Add a container (can be body or any element) --&gt;
+&lt;div data-chat-widget-auto&gt;&lt;/div&gt;
 				</div>
-				<div class="widget-container" style="width: 600px; height: 400px">
-					<div data-chat-widget-auto></div>
-				</div>
+				<p><strong>That's it!</strong> The widget will appear as a floating chat button in the bottom-right corner.</p>
 			</div>
 
 			<div class="example">
 				<h2>⚙️ Manual Initialization (JavaScript)</h2>
-				<p>Create a widget programmatically. Size the container as needed:</p>
+				<p>Create a widget programmatically with custom options:</p>
 				<div class="code">
-					&lt;script src="dist/widget/chat-widget.iife.js"&gt;&lt;/script&gt; &lt;div id="my-chat"
-					style="width: 800px; height: 500px;"&gt;&lt;/div&gt; &lt;script&gt; const widget =
-					window.createChatWidget({ container: '#my-chat', wsUrl:
-					'wss://relay.js13kgames.com/black-cat-chat' }); &lt;/script&gt;
-				</div>
-				<div class="widget-container" style="width: 800px; height: 500px">
-					<div id="manual-chat"></div>
+&lt;!-- Add the chat widget script --&gt;
+&lt;script src="dist/widget/chat-widget.iife.js"&gt;&lt;/script&gt;
+
+&lt;script&gt;
+// Initialize the chat widget
+const widget = window.createChatWidget({
+  container: document.body, // or any container element
+  wsUrl: 'wss://relay.js13kgames.com/black-cat-chat'
+});
+
+// Optional: Control the widget
+// widget.destroy(); // Remove the widget
+// widget.reconnect(); // Force reconnection
+&lt;/script&gt;
 				</div>
 			</div>
 
 			<div class="example">
-				<h2>📏 Different Sizes Example</h2>
-				<p>The widget adapts to any container size. Here are some examples:</p>
+				<h2>🎨 Widget Appearance</h2>
+				<p>The chat widget appears as a floating button in the bottom-right corner of your website:</p>
+				<ul>
+					<li><strong>Chat Button:</strong> Green floating button with chat icon</li>
+					<li><strong>Chat Window:</strong> 400x500px popup window (responsive on mobile)</li>
+					<li><strong>Dark Theme:</strong> Stylish dark interface with green accents</li>
+					<li><strong>Fixed Position:</strong> Always accessible, doesn't interfere with page content</li>
+				</ul>
+			</div>
+
+			<div class="example">
+				<h2>📋 Configuration Options</h2>
 				<div class="code">
-					&lt;!-- Small chat --&gt; &lt;div style="width: 400px; height: 300px;"&gt; &lt;div
-					data-chat-widget-auto&gt;&lt;/div&gt; &lt;/div&gt; &lt;!-- Large chat --&gt; &lt;div
-					style="width: 100%; height: 600px;"&gt; &lt;div data-chat-widget-auto&gt;&lt;/div&gt;
-					&lt;/div&gt;
-				</div>
-				<div style="display: flex; gap: 20px; margin: 20px 0">
-					<div style="width: 400px; height: 300px; border: 2px dashed #ccc">
-						<div data-chat-widget-auto></div>
-					</div>
-					<div style="flex: 1; height: 300px; border: 2px dashed #ccc">
-						<div data-chat-widget-auto></div>
-					</div>
+const widget = window.createChatWidget({
+  // Container element (optional, defaults to document.body)
+  container: document.body, // or '#my-container' or HTMLElement
+  
+  // WebSocket URL (optional, defaults to JS13K relay)
+  wsUrl: 'wss://relay.js13kgames.com/black-cat-chat'
+});
+
+// Public methods available:
+widget.reconnect(); // Force reconnection to chat server
+widget.destroy();   // Remove widget and clean up resources
 				</div>
 			</div>
 
 			<div class="example">
-				<h2>📋 All Configuration Options</h2>
-				<div class="code">
-					const widget = window.createChatWidget({ // Container selector or element (required)
-					container: '#chat-container', // WebSocket URL (optional, defaults to JS13K relay) wsUrl:
-					'wss://relay.js13kgames.com/black-cat-chat' }); // Public methods widget.reconnect(); //
-					Force reconnection widget.destroy(); // Clean up and remove widget
-				</div>
-			</div>
-
-			<div class="example">
-				<h2>📱 Mobile Responsive</h2>
-				<p>The widget automatically adapts to mobile screens (try resizing your browser):</p>
-				<div class="widget-container" style="width: 100%; max-width: 400px; height: 350px">
-					<div data-chat-widget-auto></div>
-				</div>
+				<h2>📱 Mobile Responsive Design</h2>
+				<p>The widget automatically adapts to different screen sizes:</p>
+				<ul>
+					<li><strong>Desktop:</strong> 400x500px popup window</li>
+					<li><strong>Mobile:</strong> Full-width overlay with optimized layout</li>
+					<li><strong>Touch-Friendly:</strong> Large buttons and easy scrolling</li>
+					<li><strong>Responsive Layout:</strong> Sidebar moves below on narrow screens</li>
+				</ul>
 			</div>
 
 			<div class="example">
@@ -177,20 +192,31 @@
 						<code>dist/widget/</code> folder
 					</li>
 					<li><strong>Include:</strong> Add the script to your HTML page</li>
-					<li>
-						<strong>Create Container:</strong> Add a sized container div where you want the chat
-					</li>
-					<li><strong>Initialize:</strong> Use auto-init or manual JavaScript initialization</li>
-					<li><strong>Deploy:</strong> The widget fills its container and is ready to use!</li>
+					<li><strong>Initialize:</strong> Use auto-init attribute or manual JavaScript</li>
+					<li><strong>Deploy:</strong> The floating chat button appears automatically!</li>
 				</ol>
 			</div>
 
 			<div class="example">
-				<h2>📊 Size Information</h2>
+				<h2>💡 Live Demo</h2>
 				<p>
-					<strong>Minified size:</strong> ~14.8 KB<br />
-					<strong>Gzipped size:</strong> ~3.9 KB<br />
-					<strong>Dependencies:</strong> None (self-contained)
+					<strong>Look at the bottom-right corner of this page!</strong> 
+					The chat widget is already running as a live example. 
+					Click the green chat button to try it out.
+				</p>
+				<p style="padding: 15px; background: #e8f5e8; border-radius: 8px; border-left: 4px solid #0f8;">
+					<strong>Tip:</strong> The chat connects to a live server, so you can actually chat with other people viewing this page!
+				</p>
+			</div>
+
+			<div class="example">
+				<h2>📊 Technical Details</h2>
+				<p>
+					<strong>Minified size:</strong> ~16.6 KB<br />
+					<strong>Gzipped size:</strong> ~4.3 KB<br />
+					<strong>Dependencies:</strong> None (completely self-contained)<br />
+					<strong>Browser support:</strong> All modern browsers (ES2020+)<br />
+					<strong>WebSocket:</strong> Automatic reconnection with exponential backoff
 				</p>
 			</div>
 		</div>
@@ -198,17 +224,7 @@
 		<!-- Load the chat widget -->
 		<script src="dist/widget/chat-widget.iife.js"></script>
 
-		<!-- Manual initialization example -->
-		<script>
-			// Wait for DOM to be ready
-			document.addEventListener("DOMContentLoaded", () => {
-				// Create manual widget
-				if (document.getElementById("manual-chat")) {
-					window.createChatWidget({
-						container: "#manual-chat",
-					});
-				}
-			});
-		</script>
+		<!-- Auto-initialize the widget on this demo page -->
+		<div data-chat-widget-auto></div>
 	</body>
 </html>
