@@ -42,6 +42,17 @@ function generateDisplayName(): string {
 	return adj + noun;
 }
 
+function getOrCreateDisplayName(): string {
+	const stored = localStorage.getItem('chat-display-name');
+	if (stored) {
+		return stored;
+	}
+	
+	const newName = generateDisplayName();
+	localStorage.setItem('chat-display-name', newName);
+	return newName;
+}
+
 function startPingSystem(): void {
 	// Send ping every PING_INTERVAL
 	pingInterval = setInterval(() => {
@@ -343,7 +354,7 @@ function updateUsersList(): void {
 
 function init(): void {
 	userId = generateUserId();
-	userDisplayName = generateDisplayName();
+	userDisplayName = getOrCreateDisplayName();
 	messagesDiv = document.getElementById("messages")!;
 	messageInput = document.getElementById("message-input") as HTMLInputElement;
 	sendBtn = document.getElementById("send-btn") as HTMLButtonElement;
