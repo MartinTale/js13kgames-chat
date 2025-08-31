@@ -142,7 +142,7 @@ function setupEventListeners(): void {
 function connect(): void {
 	try {
 		// Use wss for production, ws for local development
-		const wsUrl = "wss://relay.js13kgames.com/cat-chat";
+		const wsUrl = "wss://relay.js13kgames.com/black-cat-chat";
 
 		ws = new WebSocket(wsUrl);
 
