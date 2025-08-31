@@ -210,7 +210,11 @@ function addUserMessage(user: string, message: string, timestamp: number): void 
 	const isOwnMessage = user === userId;
 	messageDiv.className = isOwnMessage ? "message own" : "message";
 
-	const time = new Date(timestamp).toLocaleTimeString();
+	const time = new Date(timestamp).toLocaleTimeString([], {
+		hour: "2-digit",
+		minute: "2-digit",
+		hour12: false,
+	});
 
 	let displayName: string;
 	if (isOwnMessage) {
@@ -223,7 +227,7 @@ function addUserMessage(user: string, message: string, timestamp: number): void 
 
 	messageDiv.innerHTML = `
       <div class="message-header">
-        <strong>${displayName}</strong> <span class="message-time">[${time}]</span>
+        <strong>${displayName}</strong> <span class="message-time">${time}</span>
       </div>
       <div class="message-content">${escapeHtml(message)}</div>
     `;
@@ -266,26 +270,20 @@ function addTestMessages(): void {
 		"Canvas rendering can be tricky sometimes",
 		"Love the minimalist design of this chat",
 		"Has anyone tried the new WebGL features?",
-		"13KB is such a fun constraint to work with!"
+		"13KB is such a fun constraint to work with!",
 	];
 
-	const testUsers = [
-		"CodeNinja47",
-		"PixelMaster",
-		"GameDev2024",
-		"RetroGamer",
-		"ByteWizard"
-	];
+	const testUsers = ["CodeNinja47", "PixelMaster", "GameDev2024", "RetroGamer", "ByteWizard"];
 
 	// Add 3-5 random test messages
 	const messageCount = 3 + Math.floor(Math.random() * 3);
 	const now = Date.now();
-	
+
 	for (let i = 0; i < messageCount; i++) {
 		let user: string;
 		let randomMessage: string;
 		const timestamp = now - (messageCount - i) * 60000; // Messages spread over past few minutes
-		
+
 		// Make one of the messages from yourself
 		if (i === Math.floor(messageCount / 2)) {
 			user = userId;
@@ -294,18 +292,18 @@ function addTestMessages(): void {
 			const randomUser = testUsers[Math.floor(Math.random() * testUsers.length)];
 			user = `user_${randomUser}`;
 			randomMessage = testMessages[Math.floor(Math.random() * testMessages.length)];
-			
+
 			// Add to online users so they appear in the list
 			onlineUsers.set(user, {
 				id: user,
 				lastPing: timestamp,
-				displayName: randomUser
+				displayName: randomUser,
 			});
 		}
-		
+
 		addUserMessage(user, randomMessage, timestamp);
 	}
-	
+
 	updateUsersList();
 }
 
