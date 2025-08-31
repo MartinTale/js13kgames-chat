@@ -6,13 +6,18 @@
 </head>
 <html>
 <body>
-    <div id="chat-container">
-        <div id="messages"></div>
-        <div id="input-area">
-            <input type="text" id="message-input" placeholder="Type your message..." maxlength="200">
-            <button id="send-btn">Send</button>
+    <div id="app">
+        <div id="chat-container">
+            <div id="messages"></div>
+            <div id="input-area">
+                <input type="text" id="message-input" placeholder="Type your message..." maxlength="200">
+                <button id="send-btn">Send</button>
+            </div>
+            <div id="connection-status">Disconnected</div>
         </div>
-        <div id="connection-status">Disconnected</div>
+        <div id="sidebar">
+            <div id="users-list"></div>
+        </div>
     </div>
     <script type="module" src="/src/index.ts"></script>
 </body>

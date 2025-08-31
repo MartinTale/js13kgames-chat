@@ -3,7 +3,13 @@ interface ChatMessage {
 	user: string;
 	message: string;
 	timestamp: number;
-	type?: "user" | "system";
+	type?: "user" | "system" | "ping";
+}
+
+interface OnlineUser {
+	id: string;
+	lastPing: number;
+	displayName: string;
 }
 
 let ws: WebSocket | null = null;
@@ -11,12 +17,77 @@ let messagesDiv: HTMLElement;
 let messageInput: HTMLInputElement;
 let sendBtn: HTMLButtonElement;
 let statusDiv: HTMLElement;
+let usersDiv: HTMLElement;
 let userId: string;
+let userDisplayName: string;
 let reconnectAttempts = 0;
 const maxReconnectAttempts = 5;
 
+// User tracking
+let onlineUsers: Map<string, OnlineUser> = new Map();
+let pingInterval: number | null = null;
+let cleanupInterval: number | null = null;
+const PING_INTERVAL = 3000; // 3 seconds
+const USER_TIMEOUT = 10000; // 10 seconds
+
 function generateUserId(): string {
 	return "user_" + Math.random().toString(36).substr(2, 9);
+}
+
+function generateDisplayName(): string {
+	const adjectives = ["Cool", "Fast", "Smart", "Brave", "Quick", "Wise", "Bold", "Calm"];
+	const nouns = ["Cat", "Fox", "Wolf", "Bear", "Lion", "Tiger", "Eagle", "Shark"];
+	const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+	const noun = nouns[Math.floor(Math.random() * nouns.length)];
+	return adj + noun;
+}
+
+function startPingSystem(): void {
+	// Send ping every PING_INTERVAL
+	pingInterval = setInterval(() => {
+		if (ws && ws.readyState === WebSocket.OPEN) {
+			const pingMessage: ChatMessage = {
+				id: Date.now().toString(),
+				user: userId,
+				message: userDisplayName,
+				timestamp: Date.now(),
+				type: "ping"
+			};
+			ws.send(JSON.stringify(pingMessage));
+		}
+	}, PING_INTERVAL);
+
+	// Clean up inactive users every few seconds
+	cleanupInterval = setInterval(() => {
+		cleanupInactiveUsers();
+	}, 2000);
+}
+
+function stopPingSystem(): void {
+	if (pingInterval) {
+		clearInterval(pingInterval);
+		pingInterval = null;
+	}
+	if (cleanupInterval) {
+		clearInterval(cleanupInterval);
+		cleanupInterval = null;
+	}
+}
+
+function cleanupInactiveUsers(): void {
+	const now = Date.now();
+	let usersRemoved = false;
+	
+	for (const [userId, user] of onlineUsers) {
+		if (now - user.lastPing > USER_TIMEOUT) {
+			onlineUsers.delete(userId);
+			usersRemoved = true;
+		}
+	}
+	
+	if (usersRemoved) {
+		updateUsersList();
+	}
 }
 
 function setupEventListeners(): void {
@@ -41,6 +112,7 @@ function connect(): void {
 			reconnectAttempts = 0;
 			sendBtn.disabled = false;
 			addSystemMessage("Connected to chat server");
+			startPingSystem();
 		};
 
 		ws.onmessage = (event) => {
@@ -56,6 +128,9 @@ function connect(): void {
 			updateStatus("Disconnected", "#f80");
 			sendBtn.disabled = true;
 			addSystemMessage("Disconnected from server");
+			stopPingSystem();
+			onlineUsers.clear();
+			updateUsersList();
 			attemptReconnect();
 		};
 
@@ -108,9 +183,25 @@ function sendMessage(): void {
 function handleMessage(data: ChatMessage): void {
 	if (data.type === "system") {
 		addSystemMessage(data.message);
+	} else if (data.type === "ping") {
+		handlePing(data);
 	} else {
 		addUserMessage(data.user, data.message, data.timestamp);
 	}
+}
+
+function handlePing(data: ChatMessage): void {
+	// Don't process our own ping
+	if (data.user === userId) return;
+	
+	// Update or add user
+	onlineUsers.set(data.user, {
+		id: data.user,
+		lastPing: data.timestamp,
+		displayName: data.message // displayName is sent in message field for pings
+	});
+	
+	updateUsersList();
 }
 
 function addUserMessage(user: string, message: string, timestamp: number): void {
@@ -119,7 +210,15 @@ function addUserMessage(user: string, message: string, timestamp: number): void 
 
 	const time = new Date(timestamp).toLocaleTimeString();
 	const isOwnMessage = user === userId;
-	const displayName = isOwnMessage ? "You" : user.split("_")[1] || user;
+	
+	let displayName: string;
+	if (isOwnMessage) {
+		displayName = "You";
+	} else {
+		// Try to get display name from online users, fallback to user ID
+		const onlineUser = onlineUsers.get(user);
+		displayName = onlineUser ? onlineUser.displayName : (user.split("_")[1] || user);
+	}
 
 	messageDiv.innerHTML = `<strong>${displayName}</strong> [${time}]: ${escapeHtml(message)}`;
 
@@ -151,12 +250,48 @@ function escapeHtml(text: string): string {
 	return div.innerHTML;
 }
 
+function updateUsersList(): void {
+	const userCount = onlineUsers.size + 1; // +1 for self
+	const userCountText = `Online (${userCount})`;
+	
+	// Update user count in status or create users list
+	let usersList = document.createElement("div");
+	usersList.innerHTML = `<div class="users-header">${userCountText}</div>`;
+	
+	// Add yourself first
+	const selfDiv = document.createElement("div");
+	selfDiv.className = "user-item self";
+	selfDiv.textContent = `${userDisplayName} (You)`;
+	usersList.appendChild(selfDiv);
+	
+	// Add other users
+	const sortedUsers = Array.from(onlineUsers.values()).sort((a, b) => 
+		a.displayName.localeCompare(b.displayName)
+	);
+	
+	for (const user of sortedUsers) {
+		const userDiv = document.createElement("div");
+		userDiv.className = "user-item";
+		userDiv.textContent = user.displayName;
+		usersList.appendChild(userDiv);
+	}
+	
+	// Replace existing content
+	usersDiv.innerHTML = '';
+	usersDiv.appendChild(usersList);
+}
+
 function init(): void {
 	userId = generateUserId();
+	userDisplayName = generateDisplayName();
 	messagesDiv = document.getElementById("messages")!;
 	messageInput = document.getElementById("message-input") as HTMLInputElement;
 	sendBtn = document.getElementById("send-btn") as HTMLButtonElement;
 	statusDiv = document.getElementById("connection-status")!;
+	usersDiv = document.getElementById("users-list")!;
+
+	// Initialize users list with just yourself
+	updateUsersList();
 
 	setupEventListeners();
 	connect();
