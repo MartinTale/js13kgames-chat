@@ -224,7 +224,7 @@ class ChatWidget {
 				min-height: 0;
 			}
 			.chat-sidebar {
-				width: 140px;
+				width: 180px;
 				background: #1a1a1aaa;
 				border-left: 1px solid #333;
 				padding: 10px;
@@ -430,7 +430,7 @@ class ChatWidget {
 
 	private setupToggleListeners(): void {
 		this.chatButton.addEventListener("click", () => this.toggleChat());
-		
+
 		const closeBtn = document.getElementById(`chat-close-${this.userId}`);
 		closeBtn?.addEventListener("click", () => this.closeChat());
 	}
@@ -452,7 +452,7 @@ class ChatWidget {
 	private toggleChat(): void {
 		this.isOpen = !this.isOpen;
 		this.chatContainer.style.display = this.isOpen ? "block" : "none";
-		
+
 		if (this.isOpen) {
 			this.messageInput.focus();
 		}
