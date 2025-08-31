@@ -216,6 +216,9 @@ function addUserMessage(user: string, message: string, timestamp: number): void 
 		hour12: false,
 	});
 
+	// Truncate long messages to 200 characters
+	const truncatedMessage = message.length > 200 ? message.slice(0, 200) + "..." : message;
+
 	let displayName: string;
 	if (isOwnMessage) {
 		displayName = "You";
@@ -229,7 +232,7 @@ function addUserMessage(user: string, message: string, timestamp: number): void 
       <div class="message-header">
         <strong>${displayName}</strong> <span class="message-time">${time}</span>
       </div>
-      <div class="message-content">${escapeHtml(message)}</div>
+      <div class="message-content">${escapeHtml(truncatedMessage)}</div>
     `;
 
 	messagesDiv.appendChild(messageDiv);
