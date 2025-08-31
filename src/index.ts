@@ -151,7 +151,6 @@ function connect(): void {
 			reconnectAttempts = 0;
 			sendBtn.disabled = false;
 			addSystemMessage("Connected to chat server");
-			addTestMessages();
 			startPingSystem();
 		};
 
@@ -337,53 +336,6 @@ function escapeHtml(text: string): string {
 	const div = document.createElement("div");
 	div.textContent = text;
 	return div.innerHTML;
-}
-
-function addTestMessages(): void {
-	const testMessages = [
-		"Purr-fect! How's everyone's game development prowling along? 🐾",
-		"Just implemented some cat-like stealth mechanics!",
-		"Anyone know how to squeeze more into the 13KB limit? Every byte counts!",
-		"This chat has such sleek, dark vibes 🌙",
-		"Working on a sneaky puzzle game, very cat-like!",
-		"Canvas rendering can be as tricky as catching a laser pointer",
-		"Love the midnight aesthetic of this interface",
-		"Has anyone tried adding feline grace to their animations?",
-		"13KB is like fitting a whole cat into a tiny box - challenging but doable!",
-	];
-
-	const testUsers = ["NightProwler", "WhiskerDev", "ShadowCoder", "MidnightHacker", "StealthyCat"];
-
-	// Add 3-5 random test messages
-	const messageCount = 3 + Math.floor(Math.random() * 3);
-	const now = Date.now();
-
-	for (let i = 0; i < messageCount; i++) {
-		let user: string;
-		let randomMessage: string;
-		const timestamp = now - (messageCount - i) * 60000; // Messages spread over past few minutes
-
-		// Make one of the messages from yourself
-		if (i === Math.floor(messageCount / 2)) {
-			user = userId;
-			randomMessage = testMessages[Math.floor(Math.random() * testMessages.length)];
-		} else {
-			const randomUser = testUsers[Math.floor(Math.random() * testUsers.length)];
-			user = `user_${randomUser}`;
-			randomMessage = testMessages[Math.floor(Math.random() * testMessages.length)];
-
-			// Add to online users so they appear in the list
-			onlineUsers.set(user, {
-				id: user,
-				lastPing: timestamp,
-				displayName: randomUser,
-			});
-		}
-
-		addUserMessage(user, randomMessage, timestamp);
-	}
-
-	updateUsersList();
 }
 
 function startNameEdit(selfDiv: HTMLElement, nameSpan: HTMLElement, editBtn: HTMLElement): void {
