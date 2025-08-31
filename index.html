@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
-    <title>JS13K TS</title>
+    <title>JS13K Chat</title>
     <link rel="stylesheet" href="style.css"/>
 </head>
 <html>
 <body>
-    <canvas id="c2d" width="1920" height="1080"></canvas>
+    <div id="chat-container">
+        <div id="messages"></div>
+        <div id="input-area">
+            <input type="text" id="message-input" placeholder="Type your message..." maxlength="200">
+            <button id="send-btn">Send</button>
+        </div>
+        <div id="connection-status">Disconnected</div>
+    </div>
     <script type="module" src="/src/index.ts"></script>
 </body>
 </html>
